@@ -1,11 +1,22 @@
 ---
-title: "ajmcgohan.github.io"
+title: "Alex McGohan"
+about: 
+  template: trestles
+  image: Senior_pic.jpg
+  links:
+    - icon: github
+      text: Github
+      href: https://github.com/ajmcgohan
+    - icon: linkedin
+      text: LinkedIn
+      href: https://www.linkedin.com/in/alex-mcgohan-09432a303/
+    - icon: envelope
+      text: Email
+      href: ajmcgohan@gmail.com
 ---
 
-This is a Quarto website.
+### Introduction
 
-To learn more about Quarto websites visit <https://quarto.org/docs/websites>.
+Hello everyone, I'm Alex! I'm a junior at St. Olaf College studying Mathematics, Statistics, and Data Science. My academic and career interests include applied math, specifically probability, statistical modeling, and data analysis. With these interests, I have hopes of becoming an actuary.
 
-```{r}
-1 + 1
-```
+Outside of the classroom, I play percussion in the St. Olaf Band and the St. Olaf Orchestra, and I am a big Minnesota sports fan.
