@@ -3,6 +3,7 @@ title: "Alex McGohan"
 about: 
   template: trestles
   image: Senior_pic.jpg
+  image-width: 15em
   links:
     - icon: github
       text: Github
@@ -15,8 +16,22 @@ about:
       href: ajmcgohan@gmail.com
 ---
 
-### Introduction
+### About Me
 
 Hello everyone, I'm Alex! I'm a junior at St. Olaf College studying Mathematics, Statistics, and Data Science. My academic and career interests include applied math, specifically probability, statistical modeling, and data analysis. With these interests, I have hopes of becoming an actuary.
 
-Outside of the classroom, I play percussion in the St. Olaf Band and the St. Olaf Orchestra, and I am a big Minnesota sports fan.
+Outside of the classroom, I play percussion in the St. Olaf Band and the St. Olaf Orchestra, and I am a huge Minnesota sports fan.
+
+### Education
+
+St. Olaf College \| Northfield, MN
+
+B.A. in Mathematics, Statistics and Data Science
+
+Expected Graduation: 2028
+
+### Actuarial Exams
+
+SOA Exam P (Probability) - Passed July 2026
+
+SOA Exam FM (Financial Mathematics) - Passed August 2026

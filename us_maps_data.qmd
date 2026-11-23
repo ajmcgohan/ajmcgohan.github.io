@@ -1,0 +1,121 @@
+---
+title: "Showing US Data with Maps"
+format: html
+---
+
+```{r}
+#| message: false
+#| warning: false
+
+# Packages Required
+library(tidyverse)
+library(maps)
+library(viridis)
+library(lubridate)
+library(leaflet)
+library(sf)
+library(htmltools)
+library(glue)
+library(rvest)
+library(polite)
+library(htmltools)
+```
+
+```{r}
+# Numerical Data: State Populations
+state_pops <- read_csv("NST-EST2025-ALLDATA.csv")
+
+# Tidying the Population Data and Making a Variable to Track Change in Population from 2020 to 2025
+state_pops <- state_pops |>
+  mutate(state = parse_number(STATE),
+         pop_change = POPESTIMATE2025 - POPESTIMATE2020) |>
+  filter(state > 0) |>
+  rename(name = NAME) |>
+  select(name, pop_change) |>
+  filter(!name %in% c("District of Columbia", "Puerto Rico", "Alaska", "Hawaii")) |>
+  mutate(name = str_to_lower(name))
+```
+
+```{r}
+# Map Data
+us_states <- map_data("state") |>
+  rename(name = region) |>
+  filter(name != "district of columbia")
+
+# Merge state_pops and us_states
+state_pops_map <- state_pops |>
+  right_join(us_states, by = "name")
+```
+
+```{r}
+# Static Numerical Plot
+state_pops_map |>
+  mutate(pop_change_groups = cut(
+    pop_change,
+    breaks = c(-Inf, -50000, 0, 100000, 250000, 500000, 750000, 1500000, Inf),
+    labels = c("Loss > 50,000", "Loss 0 to 50,000", "Gain 0 to 100,000", "Gain 100,000 to 250,000", "Gain 250,000 to 500,000", "Gain 500,000 to 750,000", "Gain 750,000 to 1,500,000", "Gain > 1,500,000")
+  )) |>
+  ggplot(mapping = aes(x = long, y = lat, group = group)) + 
+    geom_polygon(aes(fill = pop_change_groups), color = "black") +
+    labs(fill = "Population change from 2020 to 2025") +
+    coord_map() + 
+    theme_void() +
+    scale_fill_brewer(palette = "RdYlGn")
+```
+
+```{r}
+# Interactive Numerical Plot
+#| warning: false
+
+states_sf <- 
+  read_sf("https://rstudio.github.io/leaflet/json/us-states.geojson") |>
+  select(name, geometry) |>
+  mutate(name = str_to_lower(name)) |>
+  filter(!name %in% c("alaska", "district of columbia", "hawaii", "puerto rico"))
+
+state_pops_map <- state_pops_map |>
+  right_join(states_sf, by = "name")
+
+# Create our bins for population changes
+# Assign the yellow-orange-red color palette
+bins <- c(-Inf, -50000, 0, 100000, 250000, 500000, 750000, 1500000, Inf)
+pal <- colorBin("RdYlGn", domain = state_pops_map$pop_change, bins = bins)
+
+# Create labels that pop up when we hover over a state.  The labels must
+#   be part of a list where each entry is tagged as HTML code.
+state_pops_map <- state_pops_map |>
+  mutate(labels = str_c(name, ": ", pop_change, " population change"))
+
+labels <- lapply(state_pops_map$labels, HTML)
+
+state_pops_map <- st_as_sf(state_pops_map)
+
+leaflet(state_pops_map) |>
+  setView(-96, 37.8, 4) |>
+  addTiles() |>
+  addPolygons(
+    fillColor = ~pal(pop_change),
+    weight = 2,
+    opacity = 1,
+    color = "white",
+    dashArray = "3",
+    fillOpacity = 0.7,
+    highlightOptions = highlightOptions(
+      weight = 5,
+      color = "#666",
+      dashArray = "",
+      fillOpacity = 0.7,
+      bringToFront = TRUE),
+    label = labels,
+    labelOptions = labelOptions(
+      style = list("font-weight" = "normal", padding = "3px 8px"),
+      textsize = "15px",
+      direction = "auto")) |>
+  addLegend(pal = pal, values = ~pop_change, opacity = 0.7, title = NULL,
+    position = "bottomright")
+```
+
+```{r}
+# Static Categorical Plot
+
+```
