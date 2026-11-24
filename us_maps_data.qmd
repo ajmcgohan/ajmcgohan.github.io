@@ -25,7 +25,6 @@ library(htmltools)
 library(glue)
 library(rvest)
 library(polite)
-library(htmltools)
 ```
 
 ### State Population Changes
@@ -77,7 +76,7 @@ state_pops_map |>
 
 From this static map, we can see that some of the states that had the largest decrease in population are also among the most populous states, such as California and New York. Overall, most states saw a population increase, as states colored orange or red being the only ones to see a decrease in population, and only 6 of the 48 states on the map are orange or red. If we want to get a closer look at each state's data, we can make an interactive plot with this data.
 
-```{r, echo=FALSE}
+```{r}
 # Interactive Numerical Plot
 #| warning: false
 
