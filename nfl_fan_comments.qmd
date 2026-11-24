@@ -25,7 +25,7 @@ library(tidytext)
 library(textdata)
 library(wordcloud)
 library(readr)
-SB57_merged_labeled <- read_csv("~/SDS264_F26/SB57_merged_labeled.csv")
+SB57_merged_labeled <- read_csv("SB57_merged_labeled.csv")
 
 # One word per row
 SB57_tidy <- SB57_merged_labeled |>
