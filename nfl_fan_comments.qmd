@@ -11,6 +11,8 @@ Reddit consists of subreddits, which are groups where people with common interes
 
 A data set, [sourced from Kaggle](https://www.kaggle.com/datasets/79591f9e803d045da8af58b767cda2eda55bbf3ea2adfec9987cc136e9967d6b), collected comments made on the r/nfl subreddit during Super Bowl 57 in 2023, which was between the Kansas City Chiefs and the Philadelphia Eagles. This data allows us to get a sense of the attitudes and feelings of NFL fans during the big game.
 
+All code for this project can be found [here](https://github.com/ajmcgohan/ajmcgohan.github.io/blob/main/nfl_fan_comments.qmd) on Github.
+
 Warning: Many explicit words in the data and following plots.
 
 ### Data Wrangling

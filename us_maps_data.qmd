@@ -1,9 +1,16 @@
 ---
 title: "Showing US Data with Maps"
+author: "Alex McGohan"
 format: html
 ---
 
-```{r}
+### Introduction
+
+To explore the use of choropleth maps in R, we are going to visualize statewide data of how state populations have changed from 2020 to 2025, as well as the most-produced grain in each state. The state population data was obtained from the [United States Census Bureau](https://www.census.gov/data/datasets/time-series/demo/popest/2020s-state-total.html), and the agriculture data was obtained from [The United States Department of Agriculture](https://www.nass.usda.gov/).
+
+All code for this project can be found [here](https://github.com/ajmcgohan/ajmcgohan.github.io/blob/main/us_maps_data.qmd) on Github.
+
+```{r, results='hide', echo=FALSE, message=FALSE}
 #| message: false
 #| warning: false
 
@@ -21,7 +28,11 @@ library(polite)
 library(htmltools)
 ```
 
-```{r}
+### State Population Changes
+
+We are going to show how state populations changed from 2020 to 2025. First, we will display this data with a static map.
+
+```{r, results='hide', echo=FALSE, message=FALSE}
 # Numerical Data: State Populations
 state_pops <- read_csv("NST-EST2025-ALLDATA.csv")
 
@@ -36,7 +47,7 @@ state_pops <- state_pops |>
   mutate(name = str_to_lower(name))
 ```
 
-```{r}
+```{r, results='hide', echo=FALSE, message=FALSE}
 # Map Data
 us_states <- map_data("state") |>
   rename(name = region) |>
@@ -47,7 +58,7 @@ state_pops_map <- state_pops |>
   right_join(us_states, by = "name")
 ```
 
-```{r}
+```{r, echo=FALSE}
 # Static Numerical Plot
 state_pops_map |>
   mutate(pop_change_groups = cut(
@@ -57,13 +68,16 @@ state_pops_map |>
   )) |>
   ggplot(mapping = aes(x = long, y = lat, group = group)) + 
     geom_polygon(aes(fill = pop_change_groups), color = "black") +
-    labs(fill = "Population change from 2020 to 2025") +
+    labs(title = "State Population Changes from 2020 to 2025",
+         fill = "Population change") +
     coord_map() + 
     theme_void() +
     scale_fill_brewer(palette = "RdYlGn")
 ```
 
-```{r}
+From this static map, we can see that some of the states that had the largest decrease in population are also among the most populous states, such as California and New York. Overall, most states saw a population increase, as states colored orange or red being the only ones to see a decrease in population, and only 6 of the 48 states on the map are orange or red. If we want to get a closer look at each state's data, we can make an interactive plot with this data.
+
+```{r, echo=FALSE}
 # Interactive Numerical Plot
 #| warning: false
 
@@ -113,9 +127,114 @@ leaflet(state_pops_map) |>
       direction = "auto")) |>
   addLegend(pal = pal, values = ~pop_change, opacity = 0.7, title = NULL,
     position = "bottomright")
+  
 ```
 
-```{r}
+Now we can get a better sense of individual states data. Texas and Florida had far and away the largest increases in population, with changes of 2,471,926 and 1,871,193, respectively. West Virginia, despite being a state with a relatively small population, had the 5th largest decrease in population of all of the contiguous 48 states. This is concerning for West Virginia, and could lead to a good investigation into why people are leaving West Virginia.
+
+### Most-Produced Grain per State
+
+For the next map, we are going back to a static map, where this one will display the most-produced grain in each state.
+```{r, results='hide', echo=FALSE, message=FALSE}
+# Grain Data
+state_grain <- read_csv("0DBA452E-3F28-3A8E-8841-43A18B3CABC9.csv")
+
+# Data Tidying
+state_grain <- state_grain |>
+  group_by(State) |>
+  slice_max(Value) |>
+  select(State, Commodity, Value) |>
+  mutate(State = str_to_lower(State),
+         Commodity = str_to_lower(Commodity)) |>
+  rename(name = State,
+         grain = Commodity,
+         value = Value)
+```
+
+```{r, results='hide', echo=FALSE, message=FALSE}
+# Map Data
+us_states <- map_data("state") |>
+  rename(name = region) |>
+  filter(name != "district of columbia")
+
+# Merge state_pops and us_states
+state_grain_map <- state_grain |>
+  right_join(us_states, by = "name")
+```
+
+```{r, echo=FALSE}
 # Static Categorical Plot
-
+state_grain_map |>
+  ggplot(mapping = aes(x = long, y = lat, group = group)) + 
+    geom_polygon(aes(fill = grain), color = "black") +
+  labs(fill = "Grain",
+       title = "Most-Produced Grain by State") +
+  coord_map() +
+  theme_void() +
+  scale_fill_manual(values = c("olivedrab","sienna2","saddlebrown", "goldenrod"))
 ```
+From this static plot, we can see that corn is the most commonly the most-produced grain by a state. Wheat is more common on the western half of the United States, especially in the northwest, than anywhere else in the United States. Arkansas and California are the two states who grow rice more than any other grain, but Arkansas and California feel like two very different places in terms of their location, so it is interesting that they share that in common. Again, we will make an interactive version of this map.
+```{r, echo=FALSE}
+#| warning: false
+
+states_sf <- 
+  read_sf("https://rstudio.github.io/leaflet/json/us-states.geojson") |>
+  select(name, geometry) |>
+  mutate(name = str_to_lower(name)) |>
+  filter(!name %in% c("alaska", "district of columbia", "hawaii", "puerto rico"))
+
+state_grain_map <- state_grain_map |>
+  right_join(states_sf, by = "name")
+
+# Add a labels column to state_grain_map
+state_grain_map <- state_grain_map |>
+  mutate(labels = str_c(name, ": ", grain, "; value: $", value))
+
+# Takes the labels column and makes it into a standalone list with 48 items
+labels <- lapply(state_grain_map$labels, HTML)
+
+# Define a color palette based on a categorical column
+levels(as.factor(state_grain_map$grain))
+factpal <- colorFactor(
+  c("olivedrab", "sienna2", "saddlebrown","goldenrod"),
+  levels = levels(as.factor(state_grain_map$grain)))
+
+state_grain_map <- st_as_sf(state_grain_map)
+
+leaflet(state_grain_map) |>
+  # view is centered in middle of US, zoom of 4 allows us
+  #   to see all 48 contiguous states
+  setView(-96, 37.8, 4) |>
+  # add OpenStreetMap base layer
+  addTiles() |>
+  addPolygons(
+    weight = 2,
+    color = "black",
+    opacity = 1,
+    # applies the color palette defined above to our variable;
+    #   unlike the tidyverse, we need data$variable in leaflet
+    fillColor = ~ factpal(state_grain_map$grain),
+    dashArray = "3",
+    fillOpacity = 0.7,
+    highlightOptions = highlightOptions(
+      weight = 5,
+      color = "#666",
+      dashArray = "",
+      fillOpacity = 0.7,
+      bringToFront = TRUE),
+    # here is where we assign the list of labels defined above
+    label = labels,
+    labelOptions = labelOptions(
+      style = list("font-weight" = "normal", padding = "3px 8px"),
+      textsize = "15px",
+      direction = "auto")
+    ) |>
+    addLegend(
+      pal = factpal, 
+      values = ~state_grain_map$grain, 
+      opacity = 0.7, 
+      title = NULL, 
+      position = "bottomright"
+    )
+```
+With this interactive map, we can not only see the most-produced grain by state, but we can also see the value of that grain. We can see that Iowa has the produces the most grain, with over 11 billion USD in corn. This interactive map shows us that the Midwest produces more grain than any other region in the United States, with several Midwestern states producing several billions of dollars worth of grain, primarily corn.
